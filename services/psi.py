@@ -1,11 +1,12 @@
 import requests
 import time
 
-import ss
+from services import ss, batchtools
 
-SS = ss.SS("PSI")
 
-def get(seq, email_address, email_service):
+def get(seq, email_address, runCount = 0):
+	
+	SS = ss.SS("PSI")
 
 	if (len(seq) < 30 or len(seq) > 1500):
 		SS.pred += "Sequence is shorter than 30 or longer than 1500"
@@ -33,25 +34,37 @@ def get(seq, email_address, email_service):
 
 	horiz = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submissions/' + filesUUID + '.horiz'
 
-
-	page = requests.get(horiz)
-
-
+	'''
 	while not requests.get(horiz).ok:
 		print('PsiPred Not Ready')
 		time.sleep(20)
 
 	raw = requests.get(horiz).text.splitlines()
+	'''
+	
+	#Length 1500 takes around 5 min
+	requesturl = batchtools.requestWait(horiz, 'PsiPred Not Ready')
+	
+	if requesturl:
+		raw = requesturl.text.splitlines()
+		for i in range(len(raw)):
+			raw[i] = raw[i].strip()
+			if raw[i].startswith("Conf"):
+				SS.conf += raw[i][6:]
+			if raw[i].startswith("Pred"):
+				SS.pred += raw[i][6:]
+				
+		SS.status = 1
+		print("PsiPred Complete")
+	else:
+		SS.pred += "PsiPred failed to respond in time"
+		SS.conf += "PsiPred failed to respond in time"
+		SS.status = 2 #error status
+		print("PsiPred failed: No response")
 
+	print("PSI::")
+	print(SS.pred)
+	print(SS.conf)
 
-	for i in range(len(raw)):
-		raw[i] = raw[i].strip()
-		if raw[i].startswith("Conf"):
-			SS.conf += raw[i][6:]
-		if raw[i].startswith("Pred"):
-			SS.pred += raw[i][6:]
-			
-	SS.status = 1
-	print("PsiPred Complete")
 	return SS
 	

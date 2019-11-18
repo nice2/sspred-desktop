@@ -10,8 +10,8 @@ class SS:
 		
 	def __init__(self, name):
 		self.name = name
-		self.plabel = name.rjust(7) + " Pred:"
-		self.clabel = name.rjust(7) + " Conf:"
+		self.plabel = name.rjust(8) + " Pred:"
+		self.clabel = name.rjust(8) + " Conf:"
 		self.pred = ""
 		self.conf = ""
 		self.cconf = []
@@ -24,5 +24,6 @@ class SS:
 			0 = not finished
 			1 = finished
 			2 = ended with error
+			3 = finished with no conf
 	'''
 	

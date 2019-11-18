@@ -1,12 +1,13 @@
 import requests
 import time
 
-import ss
+from services import ss
 
-SS = ss.SS("JPred")
 
-def get(seq, email_address, email_service):
+def get(seq, email_address, runCount = 0):
 
+	SS = ss.SS("JPred")
+	
 	if (len(seq) < 20 or len(seq) > 800):
 		SS.pred += "Sequence is shorter than 20 or longer than 800"
 		SS.conf += "Sequence is shorter than 20 or longer than 800"
@@ -30,6 +31,19 @@ def get(seq, email_address, email_service):
 
 	page = requests.get(joburl).text
 
+	#Around 5 min for length 800
+	totalSleepTime = 0
+	quitWait = False
+	while page[0] == '<' and not quitWait:
+		if totalSleepTime >= 600:
+			quitWait = True
+		else:
+			print("JpredSS Not Ready")
+			time.sleep(20)
+			totalSleepTime += 20
+			page = requests.get(joburl).text
+
+	'''
 	while page[0] == '<':
 		print("JpredSS Not Ready")
 		time.sleep(20)
@@ -38,14 +52,27 @@ def get(seq, email_address, email_service):
 
 
 	raw = page.splitlines()
+	'''
+	
+	if page[0] != '<':
+		raw = page.splitlines()
 
-	SS.pred = raw[1].replace('jnetpred:','')
-	SS.pred = SS.pred.replace('-','C')			#Replaces dashes with C
-	SS.pred = SS.pred.replace(',','')
+		SS.pred = raw[1].replace('jnetpred:','')
+		SS.pred = SS.pred.replace('-','C')			#Replaces dashes with C
+		SS.pred = SS.pred.replace(',','')
 
-	SS.conf = raw[2].replace('JNETCONF:','')
-	SS.conf = SS.conf.replace(',','')
+		SS.conf = raw[2].replace('JNETCONF:','')
+		SS.conf = SS.conf.replace(',','')
 
-	SS.status = 1
-	print("JPred Complete")
+		SS.status = 1
+		print("JPred Complete")
+	else:
+		SS.pred += "JPred failed to respond in time"
+		SS.conf += "JPred failed to respond in time"
+		SS.status = 2 #error status
+		print("JPred failed: No response")
+	
+	print("JPRED::")
+	print(SS.pred)
+	print(SS.conf)
 	return SS

@@ -1,9 +1,8 @@
-import time
-import math
 import pickle
 import email
 import os.path
 import base64
+from email.mime.text import MIMEText
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -13,8 +12,9 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 #Logs in using token.pickle
 def login():
 	creds = None
-	if os.path.exists('token.pickle'):
-		with open('token.pickle', 'rb') as token:
+	if os.path.exists('services/token.pickle'):
+		with open('services/token.pickle', 'rb') as token:
+			#print("opened pickle")
 			creds = pickle.load(token)
 		
 	#Refresh if needed
@@ -50,13 +50,11 @@ def decodeEmail(service, emailId):
 	msg_str = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
 	mime_msg = email.message_from_bytes(msg_str).as_string()
 	return mime_msg
-
-#Creates a random string to use for a prediction name
-def randBase62():
-	integer = round(time.time() * 100000)
-	chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-	result = ''
-	while integer > 0:
-		integer, remainder = divmod(integer, 62)
-		result = chars[remainder]+result
-	return result
+	
+#Create token.pickle. Needed to change emails or update scopes
+def createPickle():
+	flow = InstalledAppFlow.from_client_secrets_file('services/credentials.json', SCOPES)
+	creds = flow.run_local_server(port=0)
+	# Save the credentials for the next run
+	with open('services/token.pickle', 'wb') as token:
+		pickle.dump(creds, token)
