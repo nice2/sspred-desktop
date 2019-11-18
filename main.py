@@ -33,7 +33,7 @@ def sendData():
 		#print("Known sequence input given")
 		structId = ''.join(structureIdEntry.get().split())
 		chainId = ''.join(chainIdEntry.get().split())
-		pdbdata = batchtools.pdbget(form.structureId.data, form.chainId.data)
+		pdbdata = batchtools.pdbget(structId, chainId)
 		#'''
 		if pdbdata:
 			seq = pdbdata['primary']

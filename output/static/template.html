@@ -1,0 +1,89 @@
+<!DOCTYPE html><html><body><table id='mytable'></table>
+<br/><br/><br/>
+<tr>
+	<td>
+		<div>
+			Show Majority Vote
+			<span class='tooltip'>
+				?
+				<div class='tooltiptext'>
+					When enabled, the majority vote line will be displayed along with the results. <br>
+					Disable this option if you do not want to include it with the generated image.
+				</div>
+			</span>
+		</div>
+	</td>
+</tr>
+<tr>
+	<td>
+	<label class='switch'> 
+	  <input type='checkbox' id='togglemajority' onclick='toggleMajority()' checked>
+	  <span class='slider round'></span>
+	</label>
+	</td>
+</tr>
+</table>
+<div>
+	Amino Acids Per Row: 
+	<span class='tooltip'>
+		?
+		<ul class='tooltiptext'>
+			The number of amino acids each row will have in the results.
+			<li>This option affects image generation.</li>
+			<li>If an image has previously been generated, re-generate it to show any changes.</li>
+		</ul>
+	</span>
+	<select id='rowfield'>
+	  <option value='60'>60</option>
+	  <option value='70'>70</option>
+	  <option value='80'>80</option>
+	  <option value='90'>90</option>
+	  <option value='100'>100</option>
+	</select>
+	<button id='updaterows'>Update Rows</button>
+</div>
+<table style='text-align: center; padding-bottom: 10px'>
+	<tr>
+		<td>Helix</td>
+		<td>Coil</td>
+		<td>Beta</td>
+	</tr>
+	<tr>
+		<td><input id='hcolor' type='color' value='#0000FF'></td>
+		<td><input id='ccolor' type='color' value='#FF0000'></td>
+		<td><input id='ecolor' type='color' value='#008000'></td>
+		<td>
+			<button id='updatecolor'>Update Colors</button>
+			<span class='tooltip'>
+				?
+				<ul class='tooltiptext'>
+					The colors that will be used to highlight predicted elements.
+					<li>Refreshing will cause the colors to reset.</li>
+					<li>This option affects image generation.</li>
+					<li>If an image has previously been generated, re-generate it to show any changes.</li>
+				</ul>
+			</span>
+		</td>
+	</tr>
+</table>
+
+<button id='genimage'>Generate Image</button> 
+<span class='tooltip'>
+	?
+	<ul class='tooltiptext'>
+		Generate an image version of the above results.
+		<li>Save the generated image by right-clicking and selecting 'Save image as...'.</li>
+		<li>Re-generate the image to reflect any customization changes.</li>
+	</ul>
+</span>
+
+<table id='imgoutput' border='0'>
+	<tr>
+		<td id='myimage'></td>
+	</tr>
+</table>
+</body>	
+<link rel='stylesheet' type='text/css' href='static/css/style.css'>
+<script src='static/scripts/html2canvas.js'></script>
+<script src='static/scripts/datadisplay.js'></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
