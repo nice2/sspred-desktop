@@ -19,11 +19,13 @@ class SS:
 		self.econf = []
 		self.status = 0
 	
-	'''
-		Statuses:
-			0 = not finished
-			1 = finished
-			2 = ended with error
-			3 = finished with no conf
-	'''
+statusDict = ["not finished", "finished", "ended with an error", "finished (does not provide conf)"]
+	
+'''
+	Statuses:
+		0 = not finished
+		1 = finished
+		2 = ended with error
+		3 = finished with no conf
+'''
 	

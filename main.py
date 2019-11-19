@@ -2,6 +2,8 @@ from tkinter import *
 import time
 from services import ss, psi, jpred, raptorx, pss, sable, sspro, yaspin, emailtools, htmlmaker, batchtools
 import threading
+import os
+import webbrowser
 
 #Dictionary containing sites and their classes
 siteDict = {
@@ -14,48 +16,74 @@ siteDict = {
 	"SSPro": sspro
 }
 
+'''
 #Login to email account to be able to send emails
 email_service = emailtools.login()
 email = emailtools.getEmailAddress(email_service)
+'''
+
+#Records prediction statuses
+log = ''
 
 #Verifies input and starts threads to send to selected sites
 def sendData():
 	seq = (''.join(seqText.get(1.0,END).split())).upper()
 	
 	length = len(seq)
+	validated = True
+	
+	#Validate Seq
 	if not seq or any(c not in 'ARNDCEQGHILKMFPSTWYV' for c in seq) or length < 40 or length > 4000:
 		print('Invalid sequence: empty, contains invalid characters, or below 40/past 4000 in length')
+		validated = False
 	
+	#Validate sites
+	selected = [] #Create list of selected sites
+	for sites in siteCheckDict.keys():
+		key = siteCheckDict[sites].get()
+		if key:
+			selected.append(sites)
+	if not selected:
+		print('No sites selected')
+		validated = False
+		
 	structId = ''
 	chainId = ''
-	pdbdata = None
-	if structureIdEntry.get() and chainIdEntry.get():
+	pdbdata = None #Store pdbdata if it exists
+	if structureIdEntry.get() and chainIdEntry.get() and len(structureIdEntry.get()) >= 4:
 		#print("Known sequence input given")
 		structId = ''.join(structureIdEntry.get().split())
 		chainId = ''.join(chainIdEntry.get().split())
 		pdbdata = batchtools.pdbget(structId, chainId)
-		#'''
 		if pdbdata:
 			seq = pdbdata['primary']
-		#'''
+		else:
+			validated = False
+			print('Invalid structure id or chain Id')
 	
-	
-	#Create list of selected sites
-	selected = []
-	for sites in siteCheckDict.keys():
-		key = siteCheckDict[sites].get()
-		if key:
-			selected.append(siteDict[sites])
-			print("Sending sequence to " + sites)
+	if validated:
+		#Disable input if all inputs allowed
+		disableInput()
+		
+		global log
 
-	startTime = batchtools.randBase62() #Time data was submitted
-	ssObject = [] #List of completed sites
-	
-	#Create threads and send data
-	for s in selected:
-		mythread = threading.Thread(target = run, args = (s, seq, pdbdata, startTime, ssObject, len(selected)))
-		mythread.setName(key)
-		mythread.start()
+		unformattedStartTime = time.time()	 #Time data was submitted
+		startTime = batchtools.randBase62(unformattedStartTime)
+		ssObject = [] #List of completed sites
+		
+		#Let open results button know which file to look for
+		openButton['command'] = lambda: openResults(startTime)
+		
+		#Start time elapsed counter
+		timeElapse(unformattedStartTime, ssObject, len(selected))
+		
+		#Create threads and send data
+		for s in selected:
+			log += "Sending sequence to " + s + ".\n"
+			updateText(statusText, log)
+			mythread = threading.Thread(target = run, args = (siteDict[s], seq, pdbdata, startTime, ssObject, len(selected)))
+			mythread.setName(key)
+			mythread.start()
 
 #Takes data and sends it to a target site, then adds it to the ssObject list when completed
 #Takes a site from siteDict, sequence, pdbdata dict, ssObject to place results in, and the number of selected sites (for knowing when all results are out)
@@ -68,26 +96,60 @@ def run(predService, seq, pdbdata, startTime, ssObject, target):
 	#Do majority vote and create html if successful
 	if tempSS.status == 1 or tempSS.status == 3:
 		majority = batchtools.majorityVote(seq, ssObject)
-
+	
+	global log
+	log += tempSS.name + " " + ss.statusDict[tempSS.status] + "\n"
+	
 	htmlmaker.createHTML(startTime, ssObject, seq, pdbdata, majority)
 	
 	if len(ssObject) == target:
-		print("All predictions completed.")
+		#print("All predictions completed.")
+		log += "All predictions completed. \n"
 		#htmlmaker.createHTML(startTime, ssObject, seq, pdbdata, majority)
-	'''
-	#add to tkinter
-	failList = []
-	for obj in ssobj:
-		if obj.status != 1 and obj.status != 3:
-			failList.append(obj)
+	updateText(statusText, log)
+
+#Updates every second to display time elapsed
+def timeElapse(startTime, ssObject, target):
+	if len(ssObject) != target:
+		currentTime = time.strftime("%H:%M:%S", time.gmtime(time.time()-startTime))
+		timeElapsed = "Time Elapsed: " + currentTime
+		timeElapsedLabel.config(text = timeElapsed)
+		root.after(1000, lambda: timeElapse(startTime, ssObject, target))
 	
-	if len(failList) >= 1:
-		output += "<ul>Sites that failed to return a prediction:"
-		for obj in failList:
-			output += "<li>" + obj.name + "</li>"
-		output += "</ul>"
-	'''
+#Opens the html file with the same name as startTime
+def openResults(startTime):
+	#print(startTime)
+	url = "file://" + os.path.join(os.getcwd() + "/output/" + startTime + ".html")
+	webbrowser.open(url,new = 2) #new 2 for new tab
+
+#Disables any buttons/fields to prevent any more input when running
+def disableInput():
+	startButton['state'] = 'disabled'
+	clearButton['state'] = 'disabled'
+	seqText['state'] = 'disabled'
 	
+	jpredCheck.config(state=DISABLED)
+	psiCheck.config(state=DISABLED)
+	pssCheck.config(state=DISABLED)
+	raptorxCheck.config(state=DISABLED)
+	sableCheck.config(state=DISABLED)
+	yaspinCheck.config(state=DISABLED)
+	ssproCheck.config(state=DISABLED)
+	
+	structureIdEntry.config(state=DISABLED)
+	chainIdEntry.config(state=DISABLED)
+
+#Updates a given text widget. Enables then disables them if they were disabled
+def updateText(textbox, text):
+	if textbox['state'] == 'disabled':	
+		textbox.configure(state='normal')
+		textbox.delete(1.0, END)
+		textbox.insert(1.0, text)
+		textbox.configure(state='disabled')
+	else:
+		textbox.delete(1.0, END)
+		textbox.insert(1.0, text)
+
 root = Tk()
 root.title("Secondary Structure Prediction Display")
 root.geometry("800x600")
@@ -96,12 +158,13 @@ root.geometry("800x600")
 topFrame = Frame(root)
 topFrame.pack(side='top')
 
-# Bottom Frame will contain Outputs
+# Bottom Frame will contain Outputs ------------------------------(UNUSED)
 bottomFrame = Frame(root)
 bottomFrame.pack(side='top', fill ='both', expand = True)
 
 #######Top Frame#######
-#Contains sequence text box
+
+#Contains sequence text box -----------------------needs right clicking
 seqFrame = Frame(topFrame)
 seqLabel = Label(seqFrame, text="Sequence: ")
 seqLabel.grid(row=0, column=0, sticky=W)
@@ -173,12 +236,31 @@ startButton.grid(row = 0, column = 0, padx=10)
 #Time elapsed label
 timeElapsedLabel = Label(topFrame, text="Time Elapsed: 00:00:00")
 
+
+#Status box
+statusFrame = Frame(topFrame)
+statusLabel = Label(statusFrame, text="Prediction Status:")
+statusLabel.grid(row=0, column=0, sticky=W)
+statusTextFrame = Frame(statusFrame,borderwidth=1, relief="sunken")
+statusTextFrame.grid(row=1, column=0, sticky=W)
+statusText = Text(statusTextFrame, wrap = CHAR, height = 5, width = 30, borderwidth=0)
+statusText['state'] = 'disabled' #Disable writing to status box
+vscroll2 = Scrollbar(statusTextFrame, orient=VERTICAL, command=statusText.yview)
+statusText['yscroll'] = vscroll2.set
+vscroll2.pack(side="right", fill="y")
+statusText.pack(side="left", fill="both", expand=True)
+
+#Open results buttons
+openButton = Button(topFrame, text="Open Results")
+
 #Gridding the main parts of the top frame
 seqFrame.grid(row=0, column=0, sticky=W)
 sitesFrame.grid(row=1, column=0, sticky=W)
 knownSeqFrame.grid(row=2, column=0, sticky=W)
 controlFrame.grid(row=3, column=0)
 timeElapsedLabel.grid(row = 4, column = 0)
+statusFrame.grid(row = 5, column = 0)
+openButton.grid(row = 6, column = 0)
 
 #Check all sites by default
 psiCheck.select()

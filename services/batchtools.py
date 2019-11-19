@@ -5,9 +5,12 @@ from services import emailtools
 from bs4 import BeautifulSoup
 #Contains functions related to output that are meant to be applied to multiple scripts
 
-#Creates a random string to use for a prediction name. Based off current time.
-def randBase62():
-	integer = round(time.time() * 100000)
+#Creates a random string to use for a prediction name. Can take a time and create a string from that
+def randBase62(givenTime = None):
+	if givenTime:
+		integer = round(givenTime * 100000)
+	else:
+		integer = round(time.time() * 100000)
 	chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 	result = ''
 	while integer > 0:
