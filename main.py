@@ -16,11 +16,9 @@ siteDict = {
 	"SSPro": sspro
 }
 
-'''
 #Login to email account to be able to send emails
 email_service = emailtools.login()
 email = emailtools.getEmailAddress(email_service)
-'''
 
 #Records prediction statuses
 log = ''
