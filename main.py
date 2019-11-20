@@ -20,19 +20,17 @@ siteDict = {
 email_service = emailtools.login()
 email = emailtools.getEmailAddress(email_service)
 
-#Records prediction statuses
-log = ''
-
 #Verifies input and starts threads to send to selected sites
 def sendData():
 	seq = (''.join(seqText.get(1.0,END).split())).upper()
 	
 	length = len(seq)
 	validated = True
-	
+	log = statusText.get(1.0, 'end-1l')
 	#Validate Seq
 	if not seq or any(c not in 'ARNDCEQGHILKMFPSTWYV' for c in seq) or length < 40 or length > 4000:
-		print('Invalid sequence: empty, contains invalid characters, or below 40/past 4000 in length')
+		#print('Invalid sequence: empty, contains invalid characters, or below 40/past 4000 in length')
+		log += '-Invalid sequence: empty, contains invalid characters, or below 40/past 4000 in length \n'
 		validated = False
 	
 	#Validate sites
@@ -42,7 +40,8 @@ def sendData():
 		if key:
 			selected.append(sites)
 	if not selected:
-		print('No sites selected')
+		#print('No sites selected')
+		log += '-No sites selected \n'
 		validated = False
 		
 	structId = ''
@@ -57,14 +56,13 @@ def sendData():
 			seq = pdbdata['primary']
 		else:
 			validated = False
-			print('Invalid structure id or chain Id')
-	
+			log += '-Invalid structure id or chain Id \n'
+			#print('Invalid structure id or chain Id')
+
 	if validated:
 		#Disable input if all inputs allowed
 		disableInput()
 		
-		global log
-
 		unformattedStartTime = time.time()	 #Time data was submitted
 		startTime = batchtools.randBase62(unformattedStartTime)
 		ssObject = [] #List of completed sites
@@ -77,16 +75,17 @@ def sendData():
 		
 		#Create threads and send data
 		for s in selected:
-			log += "Sending sequence to " + s + ".\n"
+			log += "-Sending sequence to " + s + ".\n"
 			updateText(statusText, log)
 			mythread = threading.Thread(target = run, args = (siteDict[s], seq, pdbdata, startTime, ssObject, len(selected)))
 			mythread.setName(key)
 			mythread.start()
+	else:
+		updateText(statusText, log)
 
 #Takes data and sends it to a target site, then adds it to the ssObject list when completed
 #Takes a site from siteDict, sequence, pdbdata dict, ssObject to place results in, and the number of selected sites (for knowing when all results are out)
 def run(predService, seq, pdbdata, startTime, ssObject, target):
-
 	tempSS = predService.get(seq, email)
 	ssObject.append(tempSS)
 
@@ -95,15 +94,18 @@ def run(predService, seq, pdbdata, startTime, ssObject, target):
 	if tempSS.status == 1 or tempSS.status == 3:
 		majority = batchtools.majorityVote(seq, ssObject)
 	
-	global log
-	log += tempSS.name + " " + ss.statusDict[tempSS.status] + "\n"
+	log = statusText.get(1.0, 'end-1l')
+	log += "-" + tempSS.name + " " + ss.statusDict[tempSS.status] + "\n"
+	if tempSS.status != 1 and tempSS.status != 3:
+		log +=  "-" + tempSS.pred + "\n" #Print reason for failure
 	
 	htmlmaker.createHTML(startTime, ssObject, seq, pdbdata, majority)
+	openButton['state'] = 'normal'
 	
 	if len(ssObject) == target:
 		#print("All predictions completed.")
-		log += "All predictions completed. \n"
-		#htmlmaker.createHTML(startTime, ssObject, seq, pdbdata, majority)
+		log += "-All predictions completed. \n"
+		enableInput()
 	updateText(statusText, log)
 
 #Updates every second to display time elapsed
@@ -136,6 +138,25 @@ def disableInput():
 	
 	structureIdEntry.config(state=DISABLED)
 	chainIdEntry.config(state=DISABLED)
+	
+	openButton['state'] = 'disabled' #Will be reenabled when output is made
+	
+#Enables input options so that another sequence can be made
+def enableInput():
+	startButton['state'] = 'normal'
+	clearButton['state'] = 'normal'
+	seqText['state'] = 'normal'
+	
+	jpredCheck.config(state=NORMAL)
+	psiCheck.config(state=NORMAL)
+	pssCheck.config(state=NORMAL)
+	raptorxCheck.config(state=NORMAL)
+	sableCheck.config(state=NORMAL)
+	yaspinCheck.config(state=NORMAL)
+	ssproCheck.config(state=NORMAL)
+	
+	structureIdEntry.config(state=NORMAL)
+	chainIdEntry.config(state=NORMAL)
 
 #Updates a given text widget. Enables then disables them if they were disabled
 def updateText(textbox, text):
@@ -147,6 +168,7 @@ def updateText(textbox, text):
 	else:
 		textbox.delete(1.0, END)
 		textbox.insert(1.0, text)
+	textbox.see(END) #Scroll to bottom
 
 root = Tk()
 root.title("Secondary Structure Prediction Display")
@@ -156,9 +178,9 @@ root.geometry("800x600")
 topFrame = Frame(root)
 topFrame.pack(side='top')
 
-# Bottom Frame will contain Outputs ------------------------------(UNUSED)
+# Bottom Frame will contain prediction statuses
 bottomFrame = Frame(root)
-bottomFrame.pack(side='top', fill ='both', expand = True)
+bottomFrame.pack(side='top')
 
 #######Top Frame#######
 
@@ -234,14 +256,20 @@ startButton.grid(row = 0, column = 0, padx=10)
 #Time elapsed label
 timeElapsedLabel = Label(topFrame, text="Time Elapsed: 00:00:00")
 
+#Gridding the main parts of the top frame
+seqFrame.grid(row=0, column=0, sticky=W)
+sitesFrame.grid(row=1, column=0, sticky=W)
+knownSeqFrame.grid(row=2, column=0, sticky=W)
+controlFrame.grid(row=3, column=0)
+timeElapsedLabel.grid(row = 4, column = 0)
 
 #Status box
-statusFrame = Frame(topFrame)
+statusFrame = Frame(bottomFrame)
 statusLabel = Label(statusFrame, text="Prediction Status:")
 statusLabel.grid(row=0, column=0, sticky=W)
 statusTextFrame = Frame(statusFrame,borderwidth=1, relief="sunken")
 statusTextFrame.grid(row=1, column=0, sticky=W)
-statusText = Text(statusTextFrame, wrap = CHAR, height = 5, width = 30, borderwidth=0)
+statusText = Text(statusTextFrame, wrap = CHAR, height = 10, width = 50, borderwidth=0)
 statusText['state'] = 'disabled' #Disable writing to status box
 vscroll2 = Scrollbar(statusTextFrame, orient=VERTICAL, command=statusText.yview)
 statusText['yscroll'] = vscroll2.set
@@ -249,16 +277,12 @@ vscroll2.pack(side="right", fill="y")
 statusText.pack(side="left", fill="both", expand=True)
 
 #Open results buttons
-openButton = Button(topFrame, text="Open Results")
+openButton = Button(bottomFrame, text="Open Results")
+openButton['state'] = 'disabled'
 
-#Gridding the main parts of the top frame
-seqFrame.grid(row=0, column=0, sticky=W)
-sitesFrame.grid(row=1, column=0, sticky=W)
-knownSeqFrame.grid(row=2, column=0, sticky=W)
-controlFrame.grid(row=3, column=0)
-timeElapsedLabel.grid(row = 4, column = 0)
-statusFrame.grid(row = 5, column = 0)
-openButton.grid(row = 6, column = 0)
+#Gridding the main parts of the bottom frame
+statusFrame.grid(row = 0, column = 0, sticky=N)
+openButton.grid(row = 1, column = 0, pady=10)
 
 #Check all sites by default
 psiCheck.select()
