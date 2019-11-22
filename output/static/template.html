@@ -1,5 +1,6 @@
 <!DOCTYPE html><html><body><table id='mytable'></table>
 <br/><br/><br/>
+<table id="togglesTable" style="text-align: center; padding-bottom: 10px; border-spacing: 15px 0rem;">
 <tr>
 	<td>
 		<div>
@@ -13,12 +14,50 @@
 			</span>
 		</div>
 	</td>
+	<td class='enableWithPDB'>
+		<div class='enableWithPDB'>
+			Show Known Structure
+			<span class="tooltip">
+				?
+				<div class="tooltiptext">
+					When enabled, the known secondary structure will be displayed along with the results. <br>
+					Disable this option if you do not want to include it with the generated image.
+				</div>
+			</span>
+		</div>
+	</td>
+	<td class='enableWithPDB'>
+		<div class='enableWithPDB'>
+			Colorize Primary Sequence
+			<span class="tooltip">
+				?
+				<div class="tooltiptext">
+					When enabled, helices and strands will be colored in the primary sequence. <br>
+					Disable this option if you do not want to include it with the generated image.
+				</div>
+			</span>
+		</div>
+	</td>
 </tr>
 <tr>
 	<td>
 	<label class='switch'> 
 	  <input type='checkbox' id='togglemajority' onclick='toggleMajority()' checked>
 	  <span class='slider round'></span>
+	</label>
+	</td>
+
+	<td class='enableWithPDB'>
+	<label class="switch"> 
+	  <input type="checkbox" id="togglepdb" onclick="togglePDB()" checked>
+	  <span class="slider round"></span>
+	</label>
+	</td>
+
+	<td class='enableWithPDB'>
+	<label class="switch"> 
+	  <input type="checkbox" id="toggleseqcolor" onclick="colorizeSequence()" unchecked>
+	  <span class="slider round"></span>
 	</label>
 	</td>
 </tr>

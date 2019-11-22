@@ -63,6 +63,12 @@ function generateRows(length)
 			var pdbstring = pdbdata['secondary'].substring(length * i, length * (i + 1))
 			output += "<td class='pdb'>" + pdbstring + "</td></tr>";
 		}
+		else{
+			var nodes = document.getElementsByClassName("enableWithPDB");
+			for(var p=0; p < nodes.length; p++){
+				nodes[p].style.display = 'none';
+			}
+		}
 		//site rows
 		for(var j = 0; j < sites.length; j++)
 		{	
@@ -122,6 +128,63 @@ function toggleMajority(){
 		else
 		{
 			rows[i].style.display = "none";
+		}
+	}
+}
+
+function toggleRows(){
+	var checkBox = document.getElementById('togglepdb');
+	var rows = document.getElementsByClassName('pdbRow');
+	
+	for(var i = 0; i < rows.length; i++)
+	{
+		if(checkBox.checked == true)
+		{
+			rows[i].style.display = "table-row";
+		}
+		else
+		{
+			rows[i].style.display = "none";
+		}
+	}
+}
+function colorizeSequence(){
+	var checkBox = document.getElementById('toggleseqcolor');
+	pdbData = null;
+	for (var i = 0; i < a.length; i++){
+		if ('pdbid' in a[i]) 
+		{ 
+			pdbData = a[i];
+		}
+	}
+	if (pdbData != null){
+		var seqlines = document.getElementsByClassName('seq');
+		var i = 0;
+		var formatedSS = pdbData['secondary'].replace(/(.{10})/g,"$1  ");
+		while (i<formatedSS.length){
+			for (var j = 0; j < seqlines.length; j++){
+				var seqString = '';
+				for(var k = 0; k < seqlines[j].textContent.length; k++){
+					if(formatedSS[i] == 'E'){
+						seqString += '<span class="e" style="color: green;">' + seqlines[j].textContent[k] + '</span>';
+					}
+					else if(formatedSS[i] == 'H'){
+						seqString += '<span class="h" style="color: blue;">' + seqlines[j].textContent[k] + '</span>';
+					}
+					else {
+						seqString += '<span class="other" style="color: black;">' + seqlines[j].textContent[k] + '</span>';
+						//console.log(seqlines[j].innerHTML[k])
+					}
+					i++;
+				}
+				if (checkBox.checked == true){
+					seqlines[j].innerHTML = seqString;
+				}
+				else{
+					seqlines[j].innerHTML = seqlines[j].textContent;
+				}
+				
+			}
 		}
 	}
 }
