@@ -4,7 +4,7 @@ import time
 from services import ss
 
 
-def get(seq, email_address, runCount = 0):
+def get(seq, email_address):
 
 	SS = ss.SS("JPred")
 	
@@ -31,28 +31,12 @@ def get(seq, email_address, runCount = 0):
 
 	page = requests.get(joburl).text
 
-	#Around 5 min for length 800
-	totalSleepTime = 0
-	quitWait = False
-	while page[0] == '<' and not quitWait:
-		if totalSleepTime >= 600:
-			quitWait = True
-		else:
-			print("JpredSS Not Ready")
-			time.sleep(20)
-			totalSleepTime += 20
-			page = requests.get(joburl).text
-
-	'''
 	while page[0] == '<':
 		print("JpredSS Not Ready")
 		time.sleep(20)
 		page = requests.get(joburl).text
 
-
-
 	raw = page.splitlines()
-	'''
 	
 	if page[0] != '<':
 		raw = page.splitlines()

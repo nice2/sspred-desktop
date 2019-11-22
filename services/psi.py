@@ -4,7 +4,7 @@ import time
 from services import ss, batchtools
 
 
-def get(seq, email_address, runCount = 0):
+def get(seq, email_address):
 	
 	SS = ss.SS("PSI")
 

@@ -16,10 +16,6 @@ siteDict = {
 	"SSPro": sspro
 }
 
-#Login to email account to be able to send emails
-email_service = emailtools.login()
-email = emailtools.getEmailAddress(email_service)
-
 #Verifies input and starts threads to send to selected sites
 def sendData():
 	seq = (''.join(seqText.get(1.0,END).split())).upper()
@@ -59,6 +55,11 @@ def sendData():
 			log += '-Invalid structure id or chain Id \n'
 			#print('Invalid structure id or chain Id')
 
+	email = emailTextLabel['text']
+	if email is None or email == "None":
+		log += '-An email is required to submit data \n'
+		validated = False
+
 	if validated:
 		#Disable input if all inputs allowed
 		disableInput()
@@ -86,13 +87,11 @@ def sendData():
 #Takes data and sends it to a target site, then adds it to the ssObject list when completed
 #Takes a site from siteDict, sequence, pdbdata dict, ssObject to place results in, and the number of selected sites (for knowing when all results are out)
 def run(predService, seq, pdbdata, startTime, ssObject, target):
+	email = emailTextLabel['text']
 	tempSS = predService.get(seq, email)
 	ssObject.append(tempSS)
 
-	majority = None
-	#Do majority vote and create html if successful
-	if tempSS.status == 1 or tempSS.status == 3:
-		majority = batchtools.majorityVote(seq, ssObject)
+	majority = batchtools.majorityVote(seq, ssObject)
 	
 	log = statusText.get(1.0, 'end-1l')
 	log += "-" + tempSS.name + " " + ss.statusDict[tempSS.status] + "\n"
@@ -170,6 +169,87 @@ def updateText(textbox, text):
 		textbox.insert(1.0, text)
 	textbox.see(END) #Scroll to bottom
 
+#Updates the email label depending on if an email is logged in or not
+def emailToggle():
+	if emailtools.checkPickle():
+		#Login to email account to be able to send emails
+		email_service = emailtools.login()
+		email = emailtools.getEmailAddress(email_service)
+		emailTextLabel.config(text = email)
+		loginLabel.grid_forget()
+		logoutLabel.grid(row = 0, column = 2, sticky= W)
+	else:
+		logoutLabel.grid_forget()
+		loginLabel.grid(row = 0, column = 2, sticky= W)
+		emailTextLabel.config(text = "None")
+
+#Deletes token.pickle and updates the email label to be able to login again
+def logoutEmail(event=None):
+	os.remove("services/token.pickle")
+	emailToggle()
+
+#Opens a new window that provides a link for creating a pickle
+def loginEmail(event=None):
+	flow, url = emailtools.getAuthUrl()
+
+	loginWindow = Toplevel(root)
+	loginWindow.title('Email Login')
+	loginWindow.geometry("300x200")
+	#loginWindow.resizable(0, 0)
+	
+	emailWindow = Frame(loginWindow)
+	emailWindow.grab_set() #Disable main ui while this window is opened
+	emailWindow.pack()
+	
+	#Contains text for the url
+	emailUrlFrame = Frame(emailWindow)
+	urlGuideLabel = Label(emailUrlFrame, text="Login and get the code from the following link:")
+	urlTextFrame = Frame(emailUrlFrame,borderwidth=1, relief="sunken")
+	urlText = Text(urlTextFrame, wrap = CHAR, height = 3, width = 30, borderwidth=0)
+	urlText.insert(1.0, url)
+	urlText['state'] = 'disabled'
+	urlVscroll = Scrollbar(urlTextFrame, orient=VERTICAL, command=urlText.yview)
+	urlText['yscroll'] = urlVscroll.set
+	urlVscroll.pack(side="right", fill="y")
+	urlText.pack(side="left", fill="both", expand=True)
+	urlGuideLabel.grid(row = 0, column = 0, sticky= W)
+	urlTextFrame.grid(row=1, column=0, sticky=W)
+	
+	#Opens the url (in a new tab if possible)
+	openLinkButton = Button(emailWindow, text="Open Link", command = lambda:webbrowser.open(url,new = 2))
+	
+	#Contains code entry
+	emailCodeFrame = Frame(emailWindow)
+	codeLabel = Label(emailCodeFrame, text="Code:")
+	codeEntry = Entry(emailCodeFrame, width = 35)
+	codeLabel.grid(row = 0, column = 0, sticky= W)
+	codeEntry.grid(row = 0, column = 1, sticky= W)
+	
+	#Display if there is an error with the given code
+	errorLabel = Label(emailWindow, text="Invalid code given.", fg="red")
+	
+	def tryLogin(flow, url):
+		if not emailtools.createPickleFromAuth(flow, codeEntry.get()):
+			errorLabel.grid(row = 4, column = 0, pady = 5)
+			flow, url = emailtools.getAuthUrl() #Failed login will cause the former url to expire
+			updateText(urlText, url)
+		else:
+			emailToggle()
+			loginWindow.destroy()
+
+	#Either cancel login or continue with it
+	optionsFrame = Frame(emailWindow)
+	cancelLoginButton = Button(optionsFrame, text="Cancel", command = lambda:loginWindow.destroy())
+	tryLoginButton = Button(optionsFrame, text="Login", command = lambda:tryLogin(flow,url))
+	cancelLoginButton.grid(row = 0, column = 0, padx = 5)
+	tryLoginButton.grid(row = 0, column = 1, padx = 5)
+
+	#Gridding components
+	emailUrlFrame.grid(row = 0, column = 0, sticky= W)
+	openLinkButton.grid(row = 1, column = 0, pady = 5)
+	emailCodeFrame.grid(row = 2, column = 0, sticky= W)
+	optionsFrame.grid(row = 3, column = 0, pady = 5)
+
 root = Tk()
 root.title("Secondary Structure Prediction Display")
 root.geometry("800x600")
@@ -183,6 +263,18 @@ bottomFrame = Frame(root)
 bottomFrame.pack(side='top')
 
 #######Top Frame#######
+
+#User email and login/logout
+emailFrame = Frame(topFrame)
+emailLabel = Label(emailFrame,text="Email: ")
+emailLabel.grid(row = 0, column = 0, sticky= W)
+emailTextLabel = Label(emailFrame,text="None")
+emailTextLabel.grid(row = 0, column = 1, sticky= W)
+loginLabel = Label(emailFrame, text = "(Log in)", fg = "blue")  #clickable labels for switching email account
+loginLabel.bind("<Button-1>", loginEmail)
+logoutLabel = Label(emailFrame, text = "(Log out)", fg = "blue")
+logoutLabel.bind("<Button-1>", logoutEmail)
+loginLabel.grid(row = 0, column = 2, sticky= W)
 
 #Contains sequence text box -----------------------needs right clicking
 seqFrame = Frame(topFrame)
@@ -257,11 +349,12 @@ startButton.grid(row = 0, column = 0, padx=10)
 timeElapsedLabel = Label(topFrame, text="Time Elapsed: 00:00:00")
 
 #Gridding the main parts of the top frame
-seqFrame.grid(row=0, column=0, sticky=W)
-sitesFrame.grid(row=1, column=0, sticky=W)
-knownSeqFrame.grid(row=2, column=0, sticky=W)
-controlFrame.grid(row=3, column=0)
-timeElapsedLabel.grid(row = 4, column = 0)
+emailFrame.grid(row=0, column=0, sticky=W)
+seqFrame.grid(row=1, column=0, sticky=W)
+sitesFrame.grid(row=2, column=0, sticky=W)
+knownSeqFrame.grid(row=3, column=0, sticky=W)
+controlFrame.grid(row=4, column=0)
+timeElapsedLabel.grid(row = 5, column = 0)
 
 #Status box
 statusFrame = Frame(bottomFrame)
@@ -269,7 +362,7 @@ statusLabel = Label(statusFrame, text="Prediction Status:")
 statusLabel.grid(row=0, column=0, sticky=W)
 statusTextFrame = Frame(statusFrame,borderwidth=1, relief="sunken")
 statusTextFrame.grid(row=1, column=0, sticky=W)
-statusText = Text(statusTextFrame, wrap = CHAR, height = 10, width = 50, borderwidth=0)
+statusText = Text(statusTextFrame, wrap = CHAR, height = 9, width = 50, borderwidth=0)
 statusText['state'] = 'disabled' #Disable writing to status box
 vscroll2 = Scrollbar(statusTextFrame, orient=VERTICAL, command=statusText.yview)
 statusText['yscroll'] = vscroll2.set
@@ -293,5 +386,7 @@ ssproCheck.select()
 jpredCheck.select()
 pssCheck.select()
 ssproCheck.select()
+
+emailToggle()
 
 root.mainloop()

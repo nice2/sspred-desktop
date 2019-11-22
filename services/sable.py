@@ -6,7 +6,7 @@ import re
 
 from services import ss, emailtools, batchtools
 
-def get(seq, email_address, runCount = 0):
+def get(seq, email_address):
 	
 	SS = ss.SS("Sable")
 	if len(seq) <= 12:

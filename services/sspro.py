@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 from services import ss, emailtools, batchtools
 
-def get(seq, email_address, runCount = 0):
+def get(seq, email_address):
 	
 	SS = ss.SS("SSPro")
 	SS.status = 0

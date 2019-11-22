@@ -105,29 +105,19 @@ def pdbget(pdbid, chain):
 
 	return result
 
-#Takes url to check, optional message for printing, optional sleep time in seconds,and optional time in seconds to stop waiting. Defaults to 20 sec sleep time, 20 min wait time
-#Returns the url if successful within the allowed wait time, and None otherwise
-def requestWait(requesturl, message = None, sleepTime = 20, cancelAt = 1200):
-	totalSleepTime = 0
+#Takes url to check, optional message for printing, and optional sleep time in seconds. Defaults to 20 sec sleep time
+#Returns the url when successful
+def requestWait(requesturl, message = None, sleepTime = 20):
 	while not requests.get(requesturl).ok:
-		if totalSleepTime >= cancelAt:
-			return None
 		print(message)
-		time.sleep(sleepTime)
-		totalSleepTime += sleepTime
-		
+		time.sleep(sleepTime)		
 	return requests.get(requesturl)
 	
 #Same as request wait but with emails. Default sleeps for 1 min at a time
-def emailRequestWait(email_service, query, message = None, sleepTime = 60, cancelAt = 1200):
-	totalSleepTime = 0
+def emailRequestWait(email_service, query, message = None, sleepTime = 60):
 	email_id = emailtools.searchEmailId(email_service, query)
 	while(email_id == -1):
-		if totalSleepTime >= cancelAt:
-			return None
 		print(message)
 		time.sleep(sleepTime)
-		totalSleepTime += sleepTime
 		email_id = emailtools.searchEmailId(email_service, query)
 	return email_id
-	

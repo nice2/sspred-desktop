@@ -11,7 +11,7 @@ import io
 from services import ss, batchtools
 
 
-def get(seq, email_address, runCount = 0):
+def get(seq, email_address):
 
 	SS = ss.SS("RaptorX")
 	SS.status = 0
@@ -45,26 +45,13 @@ def get(seq, email_address, runCount = 0):
 	tree = html.fromstring(raw)
 
 	treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
-	'''
+
 	while treelist != []:
 		print('RaptorX Not Ready')
 		time.sleep(20)
 		raw = requests.get(url).text
 		tree = html.fromstring(raw)
 		treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
-	'''
-	totalSleepTime = 0
-	quitWait = False
-	while treelist != [] and not quitWait:
-		if totalSleepTime >= 1200 + (300 * runCount): #add 5 extra minutes for each running raptorx
-			quitWait = True
-		else:
-			print('RaptorX Not Ready')
-			time.sleep(20)
-			totalSleepTime += 20
-			raw = requests.get(url).text
-			tree = html.fromstring(raw)
-			treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
 
 	if treelist == []:
 		treelist = tree.xpath('//*[@id="infoval"]/script/text()')
