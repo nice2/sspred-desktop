@@ -1,6 +1,6 @@
 from tkinter import *
 import time
-from services import ss, psi, jpred, raptorx, pss, sable, sspro, yaspin, emailtools, htmlmaker, batchtools
+from services import ss, psi, jpred, raptorx, pss, sable, sspro, yaspin, emailtools, htmlmaker, batchtools, textfields
 import threading
 import os
 import webbrowser
@@ -125,7 +125,7 @@ def openResults(startTime):
 def disableInput():
 	startButton['state'] = 'disabled'
 	clearButton['state'] = 'disabled'
-	seqText['state'] = 'disabled'
+	seqText.text['state'] = 'disabled'
 	
 	jpredCheck.config(state=DISABLED)
 	psiCheck.config(state=DISABLED)
@@ -144,7 +144,7 @@ def disableInput():
 def enableInput():
 	startButton['state'] = 'normal'
 	clearButton['state'] = 'normal'
-	seqText['state'] = 'normal'
+	seqText.text['state'] = 'normal'
 	
 	jpredCheck.config(state=NORMAL)
 	psiCheck.config(state=NORMAL)
@@ -159,11 +159,11 @@ def enableInput():
 
 #Updates a given text widget. Enables then disables them if they were disabled
 def updateText(textbox, text):
-	if textbox['state'] == 'disabled':	
-		textbox.configure(state='normal')
+	if textbox.text['state'] == 'disabled':	
+		textbox.text['state']='normal'
 		textbox.delete(1.0, END)
 		textbox.insert(1.0, text)
-		textbox.configure(state='disabled')
+		textbox.text['state']='disabled'
 	else:
 		textbox.delete(1.0, END)
 		textbox.insert(1.0, text)
@@ -183,10 +183,11 @@ def emailToggle():
 		loginLabel.grid(row = 0, column = 2, sticky= W)
 		emailTextLabel.config(text = "None")
 
-#Deletes token.pickle and updates the email label to be able to login again
+#Deletes token.pickle and updates the email label to be able to login again. Only allowed when nothing is running
 def logoutEmail(event=None):
-	os.remove("services/token.pickle")
-	emailToggle()
+	if seqText.text['state'] != 'disabled':
+		os.remove("services/token.pickle")
+		emailToggle()
 
 #Opens a new window that provides a link for creating a pickle
 def loginEmail(event=None):
@@ -204,16 +205,11 @@ def loginEmail(event=None):
 	#Contains text for the url
 	emailUrlFrame = Frame(emailWindow)
 	urlGuideLabel = Label(emailUrlFrame, text="Login and get the code from the following link:")
-	urlTextFrame = Frame(emailUrlFrame,borderwidth=1, relief="sunken")
-	urlText = Text(urlTextFrame, wrap = CHAR, height = 3, width = 30, borderwidth=0)
-	urlText.insert(1.0, url)
-	urlText['state'] = 'disabled'
-	urlVscroll = Scrollbar(urlTextFrame, orient=VERTICAL, command=urlText.yview)
-	urlText['yscroll'] = urlVscroll.set
-	urlVscroll.pack(side="right", fill="y")
-	urlText.pack(side="left", fill="both", expand=True)
 	urlGuideLabel.grid(row = 0, column = 0, sticky= W)
-	urlTextFrame.grid(row=1, column=0, sticky=W)
+	urlText = textfields.ProperText(emailUrlFrame, height = 3, width = 30)
+	urlText.text['state'] = 'disabled'
+	updateText(urlText, url)
+	urlText.grid(row=1, column=0, sticky=W)
 	
 	#Opens the url (in a new tab if possible)
 	openLinkButton = Button(emailWindow, text="Open Link", command = lambda:webbrowser.open(url,new = 2))
@@ -221,7 +217,7 @@ def loginEmail(event=None):
 	#Contains code entry
 	emailCodeFrame = Frame(emailWindow)
 	codeLabel = Label(emailCodeFrame, text="Code:")
-	codeEntry = Entry(emailCodeFrame, width = 35)
+	codeEntry = textfields.ProperEntry(emailCodeFrame, width = 35)
 	codeLabel.grid(row = 0, column = 0, sticky= W)
 	codeEntry.grid(row = 0, column = 1, sticky= W)
 	
@@ -271,22 +267,17 @@ emailLabel.grid(row = 0, column = 0, sticky= W)
 emailTextLabel = Label(emailFrame,text="None")
 emailTextLabel.grid(row = 0, column = 1, sticky= W)
 loginLabel = Label(emailFrame, text = "(Log in)", fg = "blue")  #clickable labels for switching email account
-loginLabel.bind("<Button-1>", loginEmail)
 logoutLabel = Label(emailFrame, text = "(Log out)", fg = "blue")
-logoutLabel.bind("<Button-1>", logoutEmail)
 loginLabel.grid(row = 0, column = 2, sticky= W)
+loginLabel.bind("<Button-1>", loginEmail)
+logoutLabel.bind("<Button-1>", logoutEmail)
 
-#Contains sequence text box -----------------------needs right clicking
+#Contains sequence text box
 seqFrame = Frame(topFrame)
 seqLabel = Label(seqFrame, text="Sequence: ")
 seqLabel.grid(row=0, column=0, sticky=W)
-seqTextFrame = Frame(seqFrame,borderwidth=1, relief="sunken")
-seqTextFrame.grid(row=1, column=0, sticky=W)
-seqText = Text(seqTextFrame, wrap = CHAR, height = 5, width = 30, borderwidth=0)
-vscroll = Scrollbar(seqTextFrame, orient=VERTICAL, command=seqText.yview)
-seqText['yscroll'] = vscroll.set
-vscroll.pack(side="right", fill="y")
-seqText.pack(side="left", fill="both", expand=True)
+seqText = textfields.ProperText(seqFrame,height = 5, width = 30)
+seqText.grid(row=1, column=0, sticky=W)
 clearButton = Button(seqFrame, text="Clear Sequence", command = lambda: updateText(seqText, '')) #Clears seqText
 clearButton.grid(row = 2, column = 0, pady=5)
 
@@ -333,11 +324,11 @@ knownSeqLabel = Label(knownSeqFrame, text="Known Sequence:")
 knownSeqLabel.grid(row=0, column=0, sticky=W)
 structureIdLabel = Label(knownSeqFrame, text="Structure Id:")
 structureIdLabel.grid(row=1, column=0, sticky=W)
-structureIdEntry = Entry(knownSeqFrame)
+structureIdEntry = textfields.ProperEntry(knownSeqFrame)
 structureIdEntry.grid(row=1, column=1, sticky=W)
 chainIdLabel = Label(knownSeqFrame, text="Chain Id:")
 chainIdLabel.grid(row=2, column=0, sticky=W)
-chainIdEntry = Entry(knownSeqFrame)
+chainIdEntry = textfields.ProperEntry(knownSeqFrame)
 chainIdEntry.grid(row=2, column=1, sticky=W)
 
 #Input buttons
@@ -356,18 +347,15 @@ knownSeqFrame.grid(row=3, column=0, sticky=W)
 controlFrame.grid(row=4, column=0)
 timeElapsedLabel.grid(row = 5, column = 0)
 
+######Bottom Frame#########
+
 #Status box
 statusFrame = Frame(bottomFrame)
 statusLabel = Label(statusFrame, text="Prediction Status:")
 statusLabel.grid(row=0, column=0, sticky=W)
-statusTextFrame = Frame(statusFrame,borderwidth=1, relief="sunken")
-statusTextFrame.grid(row=1, column=0, sticky=W)
-statusText = Text(statusTextFrame, wrap = CHAR, height = 9, width = 50, borderwidth=0)
-statusText['state'] = 'disabled' #Disable writing to status box
-vscroll2 = Scrollbar(statusTextFrame, orient=VERTICAL, command=statusText.yview)
-statusText['yscroll'] = vscroll2.set
-vscroll2.pack(side="right", fill="y")
-statusText.pack(side="left", fill="both", expand=True)
+statusText = textfields.ProperText(statusFrame, height = 9, width = 50)
+statusText.text['state'] = 'disabled'
+statusText.grid(row=1, column=0, sticky=W)
 
 #Open results buttons
 openButton = Button(bottomFrame, text="Open Results")
@@ -376,6 +364,12 @@ openButton['state'] = 'disabled'
 #Gridding the main parts of the bottom frame
 statusFrame.grid(row = 0, column = 0, sticky=N)
 openButton.grid(row = 1, column = 0, pady=10)
+
+open = Button(bottomFrame, text="Osults", command = enableInput)
+clos  = Button(bottomFrame, text="fesults", command = disableInput)
+open.grid(row = 2, column = 0, pady=10)
+clos.grid(row = 3, column = 0, pady=10)
+
 
 #Check all sites by default
 psiCheck.select()
@@ -387,6 +381,7 @@ jpredCheck.select()
 pssCheck.select()
 ssproCheck.select()
 
+#Display the label for logging in or not
 emailToggle()
 
 root.mainloop()
