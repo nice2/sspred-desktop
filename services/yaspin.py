@@ -1,9 +1,10 @@
 import requests
 import time
+from guerrillamail import GuerrillaMailSession
 
 from services import ss, batchtools
 
-def get(seq, email_address):
+def get(seq):
 
 	SS = ss.SS("Yaspin")
 	SS.status = 0
@@ -14,6 +15,9 @@ def get(seq, email_address):
 		SS.status = 2 #error status
 		print("YASPIN failed: Sequence longer than 4000")
 		return SS #return SS so it will be readable as an ssObject
+		
+	session = GuerrillaMailSession()	#Creates GuerrillaMail session
+	email_address = session.get_session_state()['email_address'] #retrieves temp email address
 	
 	payload = {'seq': seq,
 	'mbjob[description]': 'testprot',
@@ -36,13 +40,6 @@ def get(seq, email_address):
 	
 	requesturl = batchtools.requestWait(result_url, 'Yaspin Not Ready')
 	
-	'''
-	while not requests.get(result_url).ok:
-		print('Yaspin Not Ready')
-		time.sleep(20)
-		
-	raw = requests.get(result_url).text.splitlines()
-	'''
 	if requesturl:
 		raw = requesturl.text.splitlines()
 		

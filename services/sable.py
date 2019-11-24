@@ -3,10 +3,12 @@ import requests
 import time
 import io
 import re
+import html
+from guerrillamail import GuerrillaMailSession
 
-from services import ss, emailtools, batchtools
+from services import ss, batchtools
 
-def get(seq, email_address):
+def get(seq):
 	
 	SS = ss.SS("Sable")
 	if len(seq) <= 12:
@@ -18,6 +20,8 @@ def get(seq, email_address):
 	SS.status = 0
 	
 	randName = batchtools.randBase62()
+	session = GuerrillaMailSession()	#Creates GuerrillaMail session
+	email_address = session.get_session_state()['email_address'] #retrieves temp email address
 
 	payload = {'txtSeq': seq, 
 	'seqName': randName,
@@ -32,25 +36,26 @@ def get(seq, email_address):
 	
 	#sable uses multiple emails to send results
 	query = 'from:(sable) subject:(sable result) query: ' + randName
-	email_service = emailtools.login()
-	'''
-	email_id = emailtools.searchEmailId(email_service, query)
-	
-	while(email_id == -1):
-		print('Sable Not Ready')	
-		time.sleep(60)
-		email_id = emailtools.searchEmailId(email_service, query)
-	'''
+
 	#Length 4000 takes around 10 min
-	email_id = batchtools.emailRequestWait(email_service, query, "Sable Not Ready")
+	message  = ''
+	stime  = time.time()
+	email_id = False
+	
+	#Waits indefinitely until results are out
+	email_id, message = batchtools.emailRequestWait(session, query, "Query:", randName, "Sable Not Ready", 30)
+	
+	#Cancel in 15 min
+	#email_id, message = batchtools.emailRequestWait(session, query, "Query:", randName, "Sable Not Ready", 30, 900)
 	
 	if email_id:
-		message = emailtools.decodeEmail(email_service, email_id)
+		#message = emailtools.decodeEmail(email_service, email_id)
+		#print(message)
 		message_parts = message.splitlines()
 
 		#getting the prediction sequence and confidence
 		index = 0
-		while message_parts[index] != 'END_SECTION':
+		while message_parts[index][:11] != 'END_SECTION':
 			if message_parts[index].startswith('>'):
 				SS.pred += message_parts[index + 2].strip()
 				SS.conf += message_parts[index + 3].strip()
@@ -62,7 +67,7 @@ def get(seq, email_address):
 		helixProb = ''
 		betaProb = ''
 		coilProb = ''
-		while message_parts[index] != 'END_SECTION':
+		while message_parts[index][:11] != 'END_SECTION':
 			if message_parts[index].startswith('>'):
 				helixProb += message_parts[index + 2][3:].strip() + ' '
 				betaProb += message_parts[index + 3][3:].strip() + ' '
@@ -74,6 +79,8 @@ def get(seq, email_address):
 		SS.cconf = coilProb.split()
 		
 		SS.status = 1
+		print(SS.pred)
+		print(SS.conf)
 		print("Sable Complete")
 	else:
 		SS.pred += "Sable failed to respond in time"

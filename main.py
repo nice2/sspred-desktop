@@ -1,6 +1,6 @@
 from tkinter import *
 import time
-from services import ss, psi, jpred, raptorx, pss, sable, sspro, yaspin, emailtools, htmlmaker, batchtools, textfields
+from services import ss, psi, jpred, raptorx, pss, sable, sspro, yaspin, htmlmaker, batchtools, textfields
 import threading
 import os
 import webbrowser
@@ -54,12 +54,7 @@ def sendData():
 			validated = False
 			log += '-Invalid structure id or chain Id \n'
 			#print('Invalid structure id or chain Id')
-
-	email = emailTextLabel['text']
-	if email is None or email == "None":
-		log += '-An email is required to submit data \n'
-		validated = False
-
+	
 	if validated:
 		#Disable input if all inputs allowed
 		disableInput()
@@ -87,8 +82,8 @@ def sendData():
 #Takes data and sends it to a target site, then adds it to the ssObject list when completed
 #Takes a site from siteDict, sequence, pdbdata dict, ssObject to place results in, and the number of selected sites (for knowing when all results are out)
 def run(predService, seq, pdbdata, startTime, ssObject, target):
-	email = emailTextLabel['text']
-	tempSS = predService.get(seq, email)
+
+	tempSS = predService.get(seq)
 	ssObject.append(tempSS)
 
 	majority = batchtools.majorityVote(seq, ssObject)
@@ -169,83 +164,6 @@ def updateText(textbox, text):
 		textbox.insert(1.0, text)
 	textbox.see(END) #Scroll to bottom
 
-#Updates the email label depending on if an email is logged in or not
-def emailToggle():
-	if emailtools.checkPickle():
-		#Login to email account to be able to send emails
-		email_service = emailtools.login()
-		email = emailtools.getEmailAddress(email_service)
-		emailTextLabel.config(text = email)
-		loginLabel.grid_forget()
-		logoutLabel.grid(row = 0, column = 2, sticky= W)
-	else:
-		logoutLabel.grid_forget()
-		loginLabel.grid(row = 0, column = 2, sticky= W)
-		emailTextLabel.config(text = "None")
-
-#Deletes token.pickle and updates the email label to be able to login again. Only allowed when nothing is running
-def logoutEmail(event=None):
-	if seqText.text['state'] != 'disabled':
-		os.remove("services/token.pickle")
-		emailToggle()
-
-#Opens a new window that provides a link for creating a pickle
-def loginEmail(event=None):
-	flow, url = emailtools.getAuthUrl()
-
-	loginWindow = Toplevel(root)
-	loginWindow.title('Email Login')
-	loginWindow.geometry("300x200")
-	#loginWindow.resizable(0, 0)
-	
-	emailWindow = Frame(loginWindow)
-	emailWindow.grab_set() #Disable main ui while this window is opened
-	emailWindow.pack()
-	
-	#Contains text for the url
-	emailUrlFrame = Frame(emailWindow)
-	urlGuideLabel = Label(emailUrlFrame, text="Login and get the code from the following link:")
-	urlGuideLabel.grid(row = 0, column = 0, sticky= W)
-	urlText = textfields.ProperText(emailUrlFrame, height = 3, width = 30)
-	urlText.text['state'] = 'disabled'
-	updateText(urlText, url)
-	urlText.grid(row=1, column=0, sticky=W)
-	
-	#Opens the url (in a new tab if possible)
-	openLinkButton = Button(emailWindow, text="Open Link", command = lambda:webbrowser.open(url,new = 2))
-	
-	#Contains code entry
-	emailCodeFrame = Frame(emailWindow)
-	codeLabel = Label(emailCodeFrame, text="Code:")
-	codeEntry = textfields.ProperEntry(emailCodeFrame, width = 35)
-	codeLabel.grid(row = 0, column = 0, sticky= W)
-	codeEntry.grid(row = 0, column = 1, sticky= W)
-	
-	#Display if there is an error with the given code
-	errorLabel = Label(emailWindow, text="Invalid code given.", fg="red")
-	
-	def tryLogin(flow, url):
-		if not emailtools.createPickleFromAuth(flow, codeEntry.get()):
-			errorLabel.grid(row = 4, column = 0, pady = 5)
-			flow, url = emailtools.getAuthUrl() #Failed login will cause the former url to expire
-			updateText(urlText, url)
-		else:
-			emailToggle()
-			loginWindow.destroy()
-
-	#Either cancel login or continue with it
-	optionsFrame = Frame(emailWindow)
-	cancelLoginButton = Button(optionsFrame, text="Cancel", command = lambda:loginWindow.destroy())
-	tryLoginButton = Button(optionsFrame, text="Login", command = lambda:tryLogin(flow,url))
-	cancelLoginButton.grid(row = 0, column = 0, padx = 5)
-	tryLoginButton.grid(row = 0, column = 1, padx = 5)
-
-	#Gridding components
-	emailUrlFrame.grid(row = 0, column = 0, sticky= W)
-	openLinkButton.grid(row = 1, column = 0, pady = 5)
-	emailCodeFrame.grid(row = 2, column = 0, sticky= W)
-	optionsFrame.grid(row = 3, column = 0, pady = 5)
-
 root = Tk()
 root.title("Secondary Structure Prediction Display")
 root.geometry("800x600")
@@ -259,18 +177,6 @@ bottomFrame = Frame(root)
 bottomFrame.pack(side='top')
 
 #######Top Frame#######
-
-#User email and login/logout
-emailFrame = Frame(topFrame)
-emailLabel = Label(emailFrame,text="Email: ")
-emailLabel.grid(row = 0, column = 0, sticky= W)
-emailTextLabel = Label(emailFrame,text="None")
-emailTextLabel.grid(row = 0, column = 1, sticky= W)
-loginLabel = Label(emailFrame, text = "(Log in)", fg = "blue")  #clickable labels for switching email account
-logoutLabel = Label(emailFrame, text = "(Log out)", fg = "blue")
-loginLabel.grid(row = 0, column = 2, sticky= W)
-loginLabel.bind("<Button-1>", loginEmail)
-logoutLabel.bind("<Button-1>", logoutEmail)
 
 #Contains sequence text box
 seqFrame = Frame(topFrame)
@@ -340,12 +246,11 @@ startButton.grid(row = 0, column = 0, padx=10)
 timeElapsedLabel = Label(topFrame, text="Time Elapsed: 00:00:00")
 
 #Gridding the main parts of the top frame
-emailFrame.grid(row=0, column=0, sticky=W)
-seqFrame.grid(row=1, column=0, sticky=W)
-sitesFrame.grid(row=2, column=0, sticky=W)
-knownSeqFrame.grid(row=3, column=0, sticky=W)
-controlFrame.grid(row=4, column=0)
-timeElapsedLabel.grid(row = 5, column = 0)
+seqFrame.grid(row=0, column=0, sticky=W)
+sitesFrame.grid(row=1, column=0, sticky=W)
+knownSeqFrame.grid(row=2, column=0, sticky=W)
+controlFrame.grid(row=3, column=0)
+timeElapsedLabel.grid(row = 4, column = 0)
 
 ######Bottom Frame#########
 
@@ -365,12 +270,6 @@ openButton['state'] = 'disabled'
 statusFrame.grid(row = 0, column = 0, sticky=N)
 openButton.grid(row = 1, column = 0, pady=10)
 
-open = Button(bottomFrame, text="Osults", command = enableInput)
-clos  = Button(bottomFrame, text="fesults", command = disableInput)
-open.grid(row = 2, column = 0, pady=10)
-clos.grid(row = 3, column = 0, pady=10)
-
-
 #Check all sites by default
 psiCheck.select()
 raptorxCheck.select()
@@ -380,8 +279,5 @@ ssproCheck.select()
 jpredCheck.select()
 pssCheck.select()
 ssproCheck.select()
-
-#Display the label for logging in or not
-emailToggle()
 
 root.mainloop()

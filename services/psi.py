@@ -1,10 +1,11 @@
 import requests
 import time
+from guerrillamail import GuerrillaMailSession
 
 from services import ss, batchtools
 
 
-def get(seq, email_address):
+def get(seq):
 	
 	SS = ss.SS("PSI")
 
@@ -15,6 +16,9 @@ def get(seq, email_address):
 		print("PsiPred failed: Sequence is shorter than 30 or longer than 1500")
 		return SS #return SS so it will be readable as an ssObject
 		
+	session = GuerrillaMailSession()	#Creates GuerrillaMail session
+	email_address = session.get_session_state()['email_address'] #retrieves temp email address
+	
 	url = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submission/'
 	payload = {'input_data': seq}
 	data = {'job': 'psipred',
@@ -33,14 +37,6 @@ def get(seq, email_address):
 	filesUUID = r.json()['submissions'][0]['UUID'] 
 
 	horiz = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submissions/' + filesUUID + '.horiz'
-
-	'''
-	while not requests.get(horiz).ok:
-		print('PsiPred Not Ready')
-		time.sleep(20)
-
-	raw = requests.get(horiz).text.splitlines()
-	'''
 	
 	#Length 1500 takes around 5 min
 	requesturl = batchtools.requestWait(horiz, 'PsiPred Not Ready')

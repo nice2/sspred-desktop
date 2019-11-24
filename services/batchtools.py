@@ -1,7 +1,8 @@
 import time
 import math
 import requests
-from services import emailtools
+from guerrillamail import GuerrillaMailSession
+import html
 from bs4 import BeautifulSoup
 #Contains functions related to output that are meant to be applied to multiple scripts
 
@@ -104,8 +105,10 @@ def pdbget(pdbid, chain):
 
 
 	return result
+	
+#No auto canceling, infinite wait time
 
-#Takes url to check, optional message for printing, and optional sleep time in seconds. Defaults to 20 sec sleep time
+#Takes url to check, optional message for printing and optional sleep time in seconds. Defaults to 20 sec sleep time
 #Returns the url when successful
 def requestWait(requesturl, message = None, sleepTime = 20):
 	while not requests.get(requesturl).ok:
@@ -113,11 +116,55 @@ def requestWait(requesturl, message = None, sleepTime = 20):
 		time.sleep(sleepTime)		
 	return requests.get(requesturl)
 	
-#Same as request wait but with emails. Default sleeps for 1 min at a time
-def emailRequestWait(email_service, query, message = None, sleepTime = 60):
-	email_id = emailtools.searchEmailId(email_service, query)
-	while(email_id == -1):
-		print(message)
+#Takes a guerillamail session, search query, identifier line (Name: or Query:), and input name. Optional print message, and time to wait between checks
+#Returns the bool email id and message when successful
+def emailRequestWait(session, query, findLine, randName, printmsg = '', sleepTime = 60):
+	message  = ''
+	email_id = False
+	
+	while message == '': #loops until desired email is found or 15 min elapse
+		print(printmsg)
 		time.sleep(sleepTime)
-		email_id = emailtools.searchEmailId(email_service, query)
-	return email_id
+		for e in session.get_email_list():			#For each email in inbox
+			data = session.get_email(e.guid).body	#gets body of email
+			if data is not None:					#Checks if email body is empty
+				for dline in data.splitlines():		#Splits body into lines
+					if findLine in dline:			#Checks if Query: line exists
+						if dline[len(findLine):].strip() == randName:	#Checks if query is same as inputed seq name
+							message = html.unescape(data)	#Sets message variable to email contents
+							email_id = True			
+	return email_id, message
+
+
+'''
+#Auto canceling versions
+#Takes url to check, optional message for printing, and optional sleep time and cancel time in seconds. Defaults to 20 sec sleep time, 15 min wait to cancel
+#Returns the url when successful
+#Returns the url when successful
+def requestWait(requesturl, message = None, sleepTime = 20 , cancelAfter = 900):
+	stime  = time.time()
+	
+	while not requests.get(requesturl).ok or time.time() > stime + cancelAfter:
+		print(message)
+		time.sleep(sleepTime)		
+	return requests.get(requesturl)
+	
+#Takes a guerillamail session, search query, identifier line (Name: or Query:), and input name. Optional print message, time to wait between checks, and how long to wait until cancelling (both in seconds)
+#Returns the bool email id and message when successful
+def emailRequestWait(session, query, findLine, randName, printmsg = '', sleepTime = 60, cancelAfter = 900):
+	message  = ''
+	stime  = time.time()
+	
+	while message == '' or time.time() > stime + cancelAfter: #loops until desired email is found or 15 min elapse
+		print(printmsg)
+		time.sleep(sleepTime)
+		for e in session.get_email_list():			#For each email in inbox
+			data = session.get_email(e.guid).body	#gets body of email
+			if data is not None:					#Checks if email body is empty
+				for dline in data.splitlines():		#Splits body into lines
+					if findLine in dline:			#Checks if Query: line exists
+						if dline[len(findLine):].strip() == randName:	#Checks if query is same as inputed seq name
+							message = html.unescape(data)	#Sets message variable to email contents
+							email_id = True			
+	return email_id, message
+'''

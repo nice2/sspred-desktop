@@ -4,10 +4,11 @@ import time
 import io
 import re
 from bs4 import BeautifulSoup
+from guerrillamail import GuerrillaMailSession
 
-from services import ss, emailtools, batchtools
+from services import ss, batchtools
 
-def get(seq, email_address):
+def get(seq):
 	
 	SS = ss.SS("SSPro")
 	SS.status = 0
@@ -20,6 +21,8 @@ def get(seq, email_address):
 		return SS #return SS so it will be readable as an ssObject
 	
 	randName = batchtools.randBase62()
+	session = GuerrillaMailSession()	#Creates GuerrillaMail session
+	email_address = session.get_session_state()['email_address'] #retrieves temp email address
 	
 	payload = {'amino_acids': seq,
 	'query_name': randName, 
@@ -27,7 +30,7 @@ def get(seq, email_address):
 	'ss':'on'}
 	
 	r = requests.post('http://scratch.proteomics.ics.uci.edu/cgi-bin/new_server/sql_predict.cgi', data = payload)
-
+	
 	soup = BeautifulSoup(r.text, 'html.parser')
 	msg = soup.find('p')
 	if msg == None:
@@ -45,21 +48,16 @@ def get(seq, email_address):
 		return SS
 	
 	query = 'from:(baldig@ics.uci.edu) subject:(Protein Structure Predictions for ' + randName + ')'
-	email_service = emailtools.login()
+	stime  = time.time()
+	email_id = False
 	
-	'''
-	email_id = emailtools.searchEmailId(email_service, query)
-	while(email_id == -1):
-		print('SSPro Not Ready')	
-		time.sleep(60)
-		email_id = emailtools.searchEmailId(email_service, query)
-	'''
+	#Waits indefinitely until results are out
+	email_id, message = batchtools.emailRequestWait(session, query, "Name:", randName, "SSPro Not Ready", 60)
 	
-	#Length 400 sequences take 10-15 min in a batch
-	email_id = batchtools.emailRequestWait(email_service, query, "SSPro Not Ready")
-	
+	#Cancels after 15 min. Length 400 sequences take 10-15 min in a batch
+	#email_id, message = batchtools.emailRequestWait(session, query, "Name:", randName, "SSPro Not Ready", 60, 900)
+
 	if email_id:
-		message = emailtools.decodeEmail(email_service, email_id)
 		message_parts = message.splitlines()
 		
 		index = 0 #current line
