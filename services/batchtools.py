@@ -144,18 +144,18 @@ def emailRequestWait(session, query, findLine, randName, printmsg = '', sleepTim
 def requestWait(requesturl, message = None, sleepTime = 20 , cancelAfter = 900):
 	stime  = time.time()
 	
-	while not requests.get(requesturl).ok or time.time() > stime + cancelAfter:
+	while not requests.get(requesturl).ok and time.time() < stime + cancelAfter: #loops until requesturl is found or cancelAfter min elapse
 		print(message)
-		time.sleep(sleepTime)		
+		time.sleep(sleepTime)
 	return requests.get(requesturl)
 	
 #Takes a guerillamail session, search query, identifier line (Name: or Query:), and input name. Optional print message, time to wait between checks, and how long to wait until cancelling (both in seconds)
 #Returns the bool email id and message when successful
 def emailRequestWait(session, query, findLine, randName, printmsg = '', sleepTime = 60, cancelAfter = 900):
 	message  = ''
-	stime  = time.time()
+	stime = time.time()
 	
-	while message == '' or time.time() > stime + cancelAfter: #loops until desired email is found or 15 min elapse
+	while message == '' and time.time() < stime + cancelAfter: #loops until desired email is found or cancelAfter min elapse
 		print(printmsg)
 		time.sleep(sleepTime)
 		for e in session.get_email_list():			#For each email in inbox
@@ -165,6 +165,6 @@ def emailRequestWait(session, query, findLine, randName, printmsg = '', sleepTim
 					if findLine in dline:			#Checks if Query: line exists
 						if dline[len(findLine):].strip() == randName:	#Checks if query is same as inputed seq name
 							message = html.unescape(data)	#Sets message variable to email contents
-							email_id = True			
+							email_id = True
 	return email_id, message
 '''
