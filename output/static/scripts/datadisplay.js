@@ -37,7 +37,7 @@ function generateRows(length)
 	}
 	
 	var rows = 0;
-	rows = Math.ceil(a[0]['seq'].length/length)
+	rows = Math.ceil(seq.length/length)
 	
 	var counter = drawCounter(seq);
 	var output = "";
