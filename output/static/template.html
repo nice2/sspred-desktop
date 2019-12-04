@@ -1,6 +1,10 @@
 <!DOCTYPE html><html><body>
+<table id="fullresults">
+<tr><td>
 <table id='mytable'></table>
 <br/><br/>
+</td></tr>
+<tr><td>
 <div id='legend'>
 	<b>Legend</b>
 	<p>S: bend</p>
@@ -9,6 +13,8 @@
 	<p>G: 3/10-helix</p>
 	<p>H: alpha helix</p>
 </div>
+</td></tr>
+</table>
 <br/><br/><br/>
 <table id="togglesTable" style="text-align: center; padding-bottom: 10px; border-spacing: 15px 0rem;">
 <tr>
@@ -120,7 +126,16 @@
 <span class='tooltip'>
 	?
 	<ul class='tooltiptext'>
-		Generate an image version of the above results.
+		Generate an image version of the above table of results without the legend.
+		<li>Save the generated image by right-clicking and selecting 'Save image as...'.</li>
+		<li>Re-generate the image to reflect any customization changes.</li>
+	</ul>
+</span>
+<button id='genimagewlegend'>Generate Image with Legend</button> 
+<span class='tooltip'>
+	?
+	<ul class='tooltiptext'>
+		Generate an image version of the above results including the legend.
 		<li>Save the generated image by right-clicking and selecting 'Save image as...'.</li>
 		<li>Re-generate the image to reflect any customization changes.</li>
 	</ul>

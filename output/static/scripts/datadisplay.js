@@ -128,7 +128,7 @@ function toggleMajority(){
 	}
 }
 
-function toggleRows(){
+function togglePDB(){
 	var checkBox = document.getElementById('togglepdb');
 	var rows = document.getElementsByClassName('pdbRow');
 	
@@ -232,6 +232,16 @@ $('#updatecolor').on('click', function() {
 
 $('#genimage').on('click', function() {
 	table = document.getElementById('mytable')
+	html2canvas(table,{scale:1, scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
+	const myNode = document.getElementById("imgoutput");
+	while (myNode.firstChild) {
+		myNode.removeChild(myNode.firstChild);
+	 }
+	document.getElementById('imgoutput').append(canvas);
+	});
+});	
+$('#genimagewlegend').on('click', function() {
+	table = document.getElementById('fullresults')
 	html2canvas(table,{scale:1, scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
 	const myNode = document.getElementById("imgoutput");
 	while (myNode.firstChild) {
