@@ -37,11 +37,7 @@ function generateRows(length)
 	}
 	
 	var rows = 0;
-	if(seq.length%length != 0) //if the sequence length = row length, there only needs to be 1 row
-	{
-		rows = Math.floor(seq.length/length)
-	}
-	rows++;
+	rows = Math.ceil(a[0]['seq'].length/length)
 	
 	var counter = drawCounter(seq);
 	var output = "";
