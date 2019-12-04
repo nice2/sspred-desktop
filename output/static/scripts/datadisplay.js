@@ -132,7 +132,7 @@ function toggleMajority(){
 	}
 }
 
-function toggleRows(){
+function togglePDB(){
 	var checkBox = document.getElementById('togglepdb');
 	var rows = document.getElementsByClassName('pdbRow');
 	
