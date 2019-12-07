@@ -44,7 +44,7 @@ def sendData():
 	chainId = ''
 	pdbdata = None #Store pdbdata if it exists
 	if structureIdEntry.get() and chainIdEntry.get() and len(structureIdEntry.get()) >= 4:
-		#print("Known sequence input given")
+		#print("Known structure input given")
 		structId = ''.join(structureIdEntry.get().split())
 		chainId = ''.join(chainIdEntry.get().split())
 		pdbdata = batchtools.pdbget(structId, chainId)
@@ -226,7 +226,7 @@ ssproCheck.grid(row=3, column=0, sticky=W)
 
 #Contains input for if the sequence is known
 knownSeqFrame = Frame(topFrame, pady=10)
-knownSeqLabel = Label(knownSeqFrame, text="Known Sequence:")
+knownSeqLabel = Label(knownSeqFrame, text="Known Structure:")
 knownSeqLabel.grid(row=0, column=0, sticky=W)
 structureIdLabel = Label(knownSeqFrame, text="Structure Id:")
 structureIdLabel.grid(row=1, column=0, sticky=W)
