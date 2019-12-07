@@ -82,6 +82,7 @@ def sendData():
 #Takes data and sends it to a target site, then adds it to the ssObject list when completed
 #Takes a site from siteDict, sequence, pdbdata dict, ssObject to place results in, and the number of selected sites (for knowing when all results are out)
 def run(predService, seq, pdbdata, startTime, ssObject, target):
+
 	tempSS = predService.get(seq)
 	ssObject.append(tempSS)
 
@@ -100,7 +101,6 @@ def run(predService, seq, pdbdata, startTime, ssObject, target):
 		log += "-All predictions completed.\n"
 		enableInput()
 	updateText(statusText, log)
-
 
 #Updates every second to display time elapsed
 def timeElapse(startTime, ssObject, target):

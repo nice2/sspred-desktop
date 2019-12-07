@@ -1,5 +1,6 @@
 from tkinter import *
 import pyperclip
+import platform
 
 #Tkinter widget classes
 
@@ -21,8 +22,11 @@ class ProperText(Frame):
 		self.rightClickMenu.add_command(label="Copy", command=self.copy)
 		self.rightClickMenu.add_command(label="Paste", command=self.paste)
 		
-		self.textField.bind("<Button-3>", self.popupmenu)
-		
+		if platform.system() == 'Darwin': #Check if OSX for different bind
+			self.textField.bind("<Button-2>", self.popupmenu)
+		else:
+			self.textField.bind("<Button-3>", self.popupmenu)
+
 		#Used to call/access text members
 		self.get = self.textField.get
 		self.insert = self.textField.insert
@@ -74,7 +78,10 @@ class ProperEntry(Entry):
 		self.rightClickMenu.add_command(label="Copy", command=self.copy)
 		self.rightClickMenu.add_command(label="Paste", command=self.paste)
 		
-		self.bind("<Button-3>", self.popupmenu)
+		if platform.system() == 'Darwin': #Check if OSX for different bind
+			self.bind("<Button-2>", self.popupmenu)
+		else:
+			self.bind("<Button-3>", self.popupmenu)
 
 	def popupmenu(self, event):
 		try:
