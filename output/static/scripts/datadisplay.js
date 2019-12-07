@@ -110,7 +110,6 @@ function generateRows(length)
 		}
 	}
 }
-
 function toggleMajority(){
 	var checkBox = document.getElementById("togglemajority");
 	var rows = document.getElementsByClassName("majrow");
