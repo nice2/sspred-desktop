@@ -98,9 +98,9 @@ function generateRows(length)
 	var table = document.getElementById('mytable');
 	table.innerHTML = output;
 
-	//Color code and add spacing
+	//Color code
 	for (var x = 0; x < document.getElementById("mytable").rows.length; x ++){
-		document.getElementById("mytable").rows[x].cells[1].innerHTML = document.getElementById("mytable").rows[x].cells[1].textContent.replace(/(.{10})/g,"$1&nbsp;&nbsp;");
+		//document.getElementById("mytable").rows[x].cells[1].innerHTML = document.getElementById("mytable").rows[x].cells[1].textContent.replace(/(.{10})/g,"$1&nbsp;&nbsp;");
 		if (document.getElementById("mytable").rows[x].cells[1].getAttribute("class") != 'seq'){
 			document.getElementById("mytable").rows[x].cells[1].innerHTML = document.getElementById("mytable").rows[x].cells[1].innerHTML.replace(/E/g,'<span class="e" style="color: green;">E</span>');
 			document.getElementById("mytable").rows[x].cells[1].innerHTML = document.getElementById("mytable").rows[x].cells[1].innerHTML.replace(/H/g,'<span class="h" style="color: blue;">H</span>');
