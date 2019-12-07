@@ -7,6 +7,6 @@ An application that sends a protein sequence to various websites to generate pre
 
 Dependencies
 -----------
-```bash
+```
 beautifulsoup4 requests lxml python-guerrillamail pyperclip
 ```
