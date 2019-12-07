@@ -22,7 +22,15 @@ def randBase62(givenTime = None):
 #Takes current completed outputs and conducts a majority vote then returns it. If a majority vote results in an equal value, currently defaults to 'X'
 def majorityVote(seq, ssObject):
 	output = ''
-	if len(ssObject) >= 2: #vote only if more than 2 ssObjects exist (at least 2 predictions)
+	
+	count = 0 #success counter
+	index = 0
+	while count < 2 and index < len(ssObject):
+		if ssObject[count].status == 1 or ssObject[count].status == 3:
+			count += 1
+		index += 1
+	
+	if count >= 2: #vote only if at least 2 ssObjects are completed
 		#create a counter for each character appearance
 		seqLength = len(seq)
 		cCount = [0] * seqLength
@@ -154,6 +162,7 @@ def requestWait(requesturl, message = None, sleepTime = 20 , cancelAfter = 900):
 def emailRequestWait(session, query, findLine, randName, printmsg = '', sleepTime = 60, cancelAfter = 900):
 	message  = ''
 	stime = time.time()
+	email_id = False
 	
 	while message == '' and time.time() < stime + cancelAfter: #loops until desired email is found or cancelAfter min elapse
 		print(printmsg)

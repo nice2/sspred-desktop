@@ -19,7 +19,7 @@ class SS:
 		self.econf = []
 		self.status = 0
 	
-statusDict = ["not finished", "finished", "ended with an error", "finished (does not provide conf)"]
+statusDict = ["not finished", "finished", "ended with an error", "finished (does not provide conf)", "sequence not accepted"]
 	
 '''
 	Statuses:
@@ -27,5 +27,6 @@ statusDict = ["not finished", "finished", "ended with an error", "finished (does
 		1 = finished
 		2 = ended with error
 		3 = finished with no conf
+		4 = sequence not accepted
 '''
 	

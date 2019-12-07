@@ -35,103 +35,110 @@ def get(seq):
 
 	r = requests.post('http://raptorx.uchicago.edu/StructurePropertyPred/predict/pred/', data=payload)
 
-
 	soup = BeautifulSoup(r.text,'html.parser')
 
-	url = soup.find(href=re.compile('http://raptorx.uchicago.edu/StructurePropertyPred/myjobs/')).get('href')
+	try: #try/catch in case a nucleotide/invalid sequence is entered
+		url = soup.find(href=re.compile('http://raptorx.uchicago.edu/StructurePropertyPred/myjobs/')).get('href')
 
-	zipid = url.split('_')
-	zipid = zipid[1].replace('/','')
+		zipid = url.split('_')
+		zipid = zipid[1].replace('/','')
 
-	raw = requests.get(url).text
-
-
-	tree = html.fromstring(raw)
-
-	treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
-
-	#No cancel
-	while treelist != []:
-		print('RaptorX Not Ready')
-		time.sleep(20)
 		raw = requests.get(url).text
+
+
 		tree = html.fromstring(raw)
+
 		treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
-	'''
-	#Cancel after 20 min
-	stime = time.time()
-	while treelist != [] or time.time() > stime + 1200:
-		print('RaptorX Not Ready')
-		time.sleep(20)
-		raw = requests.get(url).text
-		tree = html.fromstring(raw)
-		treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
-	'''
-	if treelist == []:
-		treelist = tree.xpath('//*[@id="infoval"]/script/text()')
 
-		zippath = 'http://raptorx.uchicago.edu/'
-
-		for word in treelist[0].split('"'):
-			if word[:30] == '/StructurePropertyPred/myjobs/':
-				zippath += word
-
-
-		zipss = requests.get(zippath)
-
-		while not zipss.ok:
+		#No cancel
+		while treelist != []:
+			print('RaptorX Not Ready')
 			time.sleep(20)
-			print('RaptorX Zip Not Ready')
-		#zipss = batchtools.requestWait(zippath, 'RaptorX Zip Not Ready')
+			raw = requests.get(url).text
+			tree = html.fromstring(raw)
+			treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
 		
-		mzip = request.urlopen(zippath)
+		'''
+		#Cancel after 20 min
+		stime = time.time()
+		while treelist != [] or time.time() > stime + 1200:
+			print('RaptorX Not Ready')
+			time.sleep(20)
+			raw = requests.get(url).text
+			tree = html.fromstring(raw)
+			treelist = tree.xpath('//*[@id="content"]/center[1]/text()')
+		'''
+		
+		if treelist == []:
+			treelist = tree.xpath('//*[@id="infoval"]/script/text()')
+
+			zippath = 'http://raptorx.uchicago.edu/'
+
+			for word in treelist[0].split('"'):
+				if word[:30] == '/StructurePropertyPred/myjobs/':
+					zippath += word
 
 
-		z= bytes(mzip.read())
+			zipss = requests.get(zippath)
 
-		zf = ZipFile(io.BytesIO(z), "r")
-
-		ss3path = zipid + '/' + zipid + '.ss3.txt' 
-
-		sslist = zf.read(ss3path).decode('utf-8').splitlines()[2:]
-
-
-		for i in range(len(sslist)):
-			word = sslist[i].split()
-			SS.pred += word[2]
-			SS.hconf.append(word[3])
-			SS.econf.append(word[4])
-			SS.cconf.append(word[5])
+			while not zipss.ok:
+				time.sleep(20)
+				print('RaptorX Zip Not Ready')
+			#zipss = batchtools.requestWait(zippath, 'RaptorX Zip Not Ready')
 			
-		#SS.conf = "No conf given, Need formula to determine from h/e/c conf"	
+			mzip = request.urlopen(zippath)
 
-		for i in range(len(SS.pred)):
-			if SS.pred[i] == 'C':
-				if SS.cconf[i] == "1.000":
-					SS.conf += '9'			#puts in 9 if 100% confidence level
-				else:
-					SS.conf += SS.cconf[i][2]   #puts in the 3rd character from the individual conf value string e.g. 8 if string is 0.873
-			if SS.pred[i] == 'E':
-				if SS.econf[i] == "1.000":
-					SS.conf += '9'
-				else:
-					SS.conf += SS.econf[i][2]
-			if SS.pred[i] == 'H':
-				if SS.hconf[i] == "1.000":
-					SS.conf += '9'
-				else:
-					SS.conf += SS.hconf[i][2]
 
-		SS.status = 1
-		print("RaptorX Complete")
-	else:
-		SS.pred += "RaptorX failed to respond in time"
-		SS.conf += "RaptorX failed to respond in time"
-		SS.status = 2 #error status
-		print("RaptorX failed: No response")
-	SS.status = 1
-	print("RaptorX Complete")
+			z= bytes(mzip.read())
+
+			zf = ZipFile(io.BytesIO(z), "r")
+
+			ss3path = zipid + '/' + zipid + '.ss3.txt' 
+
+			sslist = zf.read(ss3path).decode('utf-8').splitlines()[2:]
+
+
+			for i in range(len(sslist)):
+				word = sslist[i].split()
+				SS.pred += word[2]
+				SS.hconf.append(word[3])
+				SS.econf.append(word[4])
+				SS.cconf.append(word[5])
+				
+			#SS.conf = "No conf given, Need formula to determine from h/e/c conf"	
+
+			for i in range(len(SS.pred)):
+				if SS.pred[i] == 'C':
+					if SS.cconf[i] == "1.000":
+						SS.conf += '9'			#puts in 9 if 100% confidence level
+					else:
+						SS.conf += SS.cconf[i][2]   #puts in the 3rd character from the individual conf value string e.g. 8 if string is 0.873
+				if SS.pred[i] == 'E':
+					if SS.econf[i] == "1.000":
+						SS.conf += '9'
+					else:
+						SS.conf += SS.econf[i][2]
+				if SS.pred[i] == 'H':
+					if SS.hconf[i] == "1.000":
+						SS.conf += '9'
+					else:
+						SS.conf += SS.hconf[i][2]
+
+			SS.status = 1
+			print("RaptorX Complete")
+		else:
+			SS.pred += "RaptorX failed to respond in time"
+			SS.conf += "RaptorX failed to respond in time"
+			SS.status = 2 #error status
+			print("RaptorX failed: No response")
+	except:
+		SS.pred += "RaptorX failed: sequence not accepted"
+		SS.conf += "RaptorX failed: sequence not accepted"
+		SS.status = 4
+		print("RaptorX failed: sequence not accepted")
+		
 	print("RAPTOR::")
 	print(SS.pred)
 	print(SS.conf)
+	
 	return SS

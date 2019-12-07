@@ -26,41 +26,47 @@ def get(seq):
         	'email': email_address, }
 	r = requests.post(url, data=data, files=payload, headers={'accept': 'application/json'})
 	
-	uuid = r.json()['UUID']
-	
+	try: #try/catch in case a nucleotide/invalid sequence is entered
+		uuid = r.json()['UUID']
+		
 
-	jsonurl = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submission/' + uuid + '?format=json'
+		jsonurl = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submission/' + uuid + '?format=json'
 
 
-	r = requests.get(jsonurl)
+		r = requests.get(jsonurl)
 
-	filesUUID = r.json()['submissions'][0]['UUID'] 
+		filesUUID = r.json()['submissions'][0]['UUID'] 
 
-	horiz = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submissions/' + filesUUID + '.horiz'
-	
-	#Length 1500 takes around 5 min
-	requesturl = batchtools.requestWait(horiz, 'PsiPred Not Ready')
-	
-	if requesturl:
-		raw = requesturl.text.splitlines()
-		for i in range(len(raw)):
-			raw[i] = raw[i].strip()
-			if raw[i].startswith("Conf"):
-				SS.conf += raw[i][6:]
-			if raw[i].startswith("Pred"):
-				SS.pred += raw[i][6:]
-				
-		SS.status = 1
-		print("PsiPred Complete")
-	else:
-		SS.pred += "PsiPred failed to respond in time"
-		SS.conf += "PsiPred failed to respond in time"
-		SS.status = 2 #error status
-		print("PsiPred failed: No response")
+		horiz = 'http://bioinf.cs.ucl.ac.uk/psipred/api/submissions/' + filesUUID + '.horiz'
+		
+		#Length 1500 takes around 5 min
+		requesturl = batchtools.requestWait(horiz, 'PsiPred Not Ready')
+		
+		if requesturl:
+			raw = requesturl.text.splitlines()
+			for i in range(len(raw)):
+				raw[i] = raw[i].strip()
+				if raw[i].startswith("Conf"):
+					SS.conf += raw[i][6:]
+				if raw[i].startswith("Pred"):
+					SS.pred += raw[i][6:]
+					
+			SS.status = 1
+			print("PsiPred Complete")
+		else:
+			SS.pred += "PsiPred failed to respond in time"
+			SS.conf += "PsiPred failed to respond in time"
+			SS.status = 2 #error status
+			print("PsiPred failed: No response")
 
+	except:
+		SS.pred += "PsiPred failed: sequence not accepted"
+		SS.conf += "PsiPred failed: sequence not accepted"
+		SS.status = 4
+		print("PsiPred failed: sequence not accepted")
+			
 	print("PSI::")
 	print(SS.pred)
 	print(SS.conf)
-
-	return SS
 	
+	return SS
