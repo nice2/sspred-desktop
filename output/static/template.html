@@ -79,11 +79,11 @@
 </tr>
 </table>
 <div>
-	Amino Acids Per Row: 
+	Elements Per Row: 
 	<span class='tooltip'>
 		?
 		<ul class='tooltiptext'>
-			The number of amino acids each row will have in the results.
+			The number of elements each row will have in the results.
 			<li>This option affects image generation.</li>
 			<li>If an image has previously been generated, re-generate it to show any changes.</li>
 		</ul>
@@ -96,6 +96,12 @@
 	  <option value='100'>100</option>
 	</select>
 	<button id='updaterows'>Update Rows</button>
+</div>
+<div id = "ieNotice" style="display:none;font-weight:bold">
+	<br>
+	The features below are either incompatible or more difficult to use with Internet Explorer.<br>
+	Switch to a compatible browser such as Google Chrome or Mozilla Firefox in order to properly use them.
+	<br>
 </div>
 <table style='text-align: center; padding-bottom: 10px'>
 	<tr>
@@ -127,7 +133,10 @@
 	?
 	<ul class='tooltiptext'>
 		Generate an image version of the above table of results without the legend.
-		<li>Save the generated image by right-clicking and selecting 'Save image as...'.</li>
+		<li>Save the generated image by right-clicking and selecting 'Save image as...'
+			<br>
+			or with the Save Image button that shows after generating an image.
+		</li>
 		<li>Re-generate the image to reflect any customization changes.</li>
 	</ul>
 </span>
@@ -136,11 +145,22 @@
 	?
 	<ul class='tooltiptext'>
 		Generate an image version of the above results including the legend.
-		<li>Save the generated image by right-clicking and selecting 'Save image as...'.</li>
+		<li>Save the generated image by right-clicking and selecting 'Save image as...'.
+			<br>
+			or with the Save Image button that shows after generating an image.
+		</li>
 		<li>Re-generate the image to reflect any customization changes.</li>
 	</ul>
 </span>
-
+<div id='saveimagediv' style="display: none;">
+	<button id='saveimage'>Save Image</button>
+	<span class='sitetooltip'>
+	?
+	<ul class='tooltiptext'>
+		Saves the generated image onto your device.
+	</ul>
+	</span>
+</div>
 <table id='imgoutput' border='0'>
 	<tr>
 		<td id='myimage'></td>

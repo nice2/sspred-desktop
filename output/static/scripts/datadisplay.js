@@ -238,7 +238,9 @@ $('#genimage').on('click', function() {
 	 }
 	document.getElementById('imgoutput').append(canvas);
 	});
+	document.getElementById('saveimagediv').style.display = "inline";
 });	
+
 $('#genimagewlegend').on('click', function() {
 	table = document.getElementById('fullresults')
 	html2canvas(table,{scale:1, scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
@@ -248,4 +250,25 @@ $('#genimagewlegend').on('click', function() {
 	 }
 	document.getElementById('imgoutput').append(canvas);
 	});
+	document.getElementById('saveimagediv').style.display = "inline";
+});
+
+$('#saveimage').on('click', function() {
+	var canvas = document.getElementsByTagName("canvas")[0];
+	imglink = canvas.toDataURL("image/png", 1.0);
+
+	var saveEle = document.createElement('a');
+	saveEle.href = imglink;
+	saveEle.download = "output.png";
+	saveEle.click();
 });	
+
+// Display a message if user is using IE
+var ua = window.navigator.userAgent;
+var isIE = /MSIE|Trident/.test(ua);
+
+if(isIE)
+{
+	ieDiv = document.getElementById("ieNotice");
+	ieDiv.style.display = 'block';
+}
