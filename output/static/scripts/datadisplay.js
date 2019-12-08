@@ -155,7 +155,7 @@ function colorizeSequence(){
 	if (pdbData != null){
 		var seqlines = document.getElementsByClassName('seq');
 		var i = 0;
-		var formatedSS = pdbData['secondary'].replace(/(.{10})/g,"$1  ");
+		var formatedSS = pdbData['secondary'];
 		while (i<formatedSS.length){
 			for (var j = 0; j < seqlines.length; j++){
 				var seqString = '';
@@ -231,7 +231,7 @@ $('#updatecolor').on('click', function() {
 
 $('#genimage').on('click', function() {
 	table = document.getElementById('mytable')
-	html2canvas(table,{scale:1, scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
+	html2canvas(table,{scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
 	const myNode = document.getElementById("imgoutput");
 	while (myNode.firstChild) {
 		myNode.removeChild(myNode.firstChild);
@@ -243,7 +243,7 @@ $('#genimage').on('click', function() {
 
 $('#genimagewlegend').on('click', function() {
 	table = document.getElementById('fullresults')
-	html2canvas(table,{scale:1, scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
+	html2canvas(table,{scrollY: (window.pageYOffset * -1)}).then(function(canvas) {
 	const myNode = document.getElementById("imgoutput");
 	while (myNode.firstChild) {
 		myNode.removeChild(myNode.firstChild);
