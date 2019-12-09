@@ -24,11 +24,10 @@ def majorityVote(seq, ssObject):
 	output = ''
 	
 	count = 0 #success counter
-	index = 0
-	while count < 2 and index < len(ssObject):
-		if ssObject[count].status == 1 or ssObject[count].status == 3:
+	
+	for index in ssObject:
+		if index.status == 1 or index.status == 3:
 			count += 1
-		index += 1
 	
 	if count >= 2: #vote only if at least 2 ssObjects are completed
 		#create a counter for each character appearance
